@@ -57,12 +57,11 @@ router.put('/:id', async (req, res) => {
     } else if (!title || !contents) {
       res.status(400).json({ message: "Please provide title and contents for the post" })
     } else {
-      const updatePostResult = await Posts.insert({
+      await Posts.update(updatePostId, {
         title: title,
         contents: contents
       });
-      const postId = updatePostResult.id;
-      const post = await Posts.findById(postId);
+      const post = await Posts.findById(updatePostId);
       res.status(200).json(post)
     }
   } catch (err) {
@@ -70,9 +69,37 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
-
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletePostId = req.params.id;
+    const deletePost = await Posts.findById(deletePostId);
+    if (!deletePost) {
+      res.status(404).json({ message: "The post with the specified ID does not exist" })
+    } else {
+      console.log('fghfghjh');
+      await Posts.remove(deletePostId)
+      res.status(200).json({ message: "The user post has been NUKED!" })
+    }
+  } catch (err) {
+    res.status(500)({ message: "The post could not be removed" })
+  }
 });
+
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const post = await Posts.findById(postId);
+    if (!post) {
+      res.status(404).json({ message: "The post with the specified ID does not exist"  })
+      return
+    }
+    const comments = await Posts.findPostComments(postId)
+    res.status(200).json(comments)
+
+  } catch (err) {
+    res.status(500)({ message: "The comments information could not be retrieved" })
+  }
+})
 
 
 
